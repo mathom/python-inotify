@@ -133,9 +133,111 @@ static PyMethodDef methods[] = {
     
 static char doc[] = "Low-level inotify interface wrappers.";
 
+static void define_const(PyObject *dict, const char *name, uint32_t val)
+{
+    PyObject *pyval = PyInt_FromLong(val);
+    PyObject *pyname = PyString_FromString(name);
+
+    if (pyname && pyval)
+	PyDict_SetItem(dict, pyname, pyval);
+
+    Py_XDECREF(pyname);
+    Py_XDECREF(pyval);
+}
+
+static void define_consts(PyObject *dict)
+{
+#ifdef IN_ACCESS
+    define_const(dict, "IN_ACCESS", IN_ACCESS);
+#endif
+#ifdef IN_MODIFY
+    define_const(dict, "IN_MODIFY", IN_MODIFY);
+#endif
+#ifdef IN_ATTRIB
+    define_const(dict, "IN_ATTRIB", IN_ATTRIB);
+#endif
+#ifdef IN_CLOSE_WRITE
+    define_const(dict, "IN_CLOSE_WRITE", IN_CLOSE_WRITE);
+#endif
+#ifdef IN_CLOSE_NOWRITE
+    define_const(dict, "IN_CLOSE_NOWRITE", IN_CLOSE_NOWRITE);
+#endif
+#ifdef IN_CLOSE
+    define_const(dict, "IN_CLOSE", IN_CLOSE);
+#endif
+#ifdef IN_OPEN
+    define_const(dict, "IN_OPEN", IN_OPEN);
+#endif
+#ifdef IN_MOVED_FROM
+    define_const(dict, "IN_MOVED_FROM", IN_MOVED_FROM);
+#endif
+#ifdef IN_MOVED_TO
+    define_const(dict, "IN_MOVED_TO", IN_MOVED_TO);
+#endif
+#ifdef IN_MOVE
+    define_const(dict, "IN_MOVE", IN_MOVE);
+#endif
+#ifdef IN_CREATE
+    define_const(dict, "IN_CREATE", IN_CREATE);
+#endif
+#ifdef IN_DELETE
+    define_const(dict, "IN_DELETE", IN_DELETE);
+#endif
+#ifdef IN_DELETE_SELF
+    define_const(dict, "IN_DELETE_SELF", IN_DELETE_SELF);
+#endif
+#ifdef IN_MOVE_SELF
+    define_const(dict, "IN_MOVE_SELF", IN_MOVE_SELF);
+#endif
+
+#ifdef IN_UNMOUNT
+    define_const(dict, "IN_UNMOUNT", IN_UNMOUNT);
+#endif
+#ifdef IN_Q_OVERFLOW
+    define_const(dict, "IN_Q_OVERFLOW", IN_Q_OVERFLOW);
+#endif
+#ifdef IN_IGNORED
+    define_const(dict, "IN_IGNORED", IN_IGNORED);
+#endif
+
+#ifdef IN_CLOSE
+    define_const(dict, "IN_CLOSE", IN_CLOSE);
+#endif
+#ifdef IN_MOVE
+    define_const(dict, "IN_MOVE", IN_MOVE);
+#endif
+
+#ifdef IN_ONLYDIR
+    define_const(dict, "IN_ONLYDIR", IN_ONLYDIR);
+#endif
+
+#ifdef IN_DONT_FOLLOW
+    define_const(dict, "IN_DONT_FOLLOW", IN_DONT_FOLLOW);
+#endif
+#ifdef IN_MASK_ADD
+    define_const(dict, "IN_MASK_ADD", IN_MASK_ADD);
+#endif
+
+#ifdef IN_ISDIR
+    define_const(dict, "IN_ISDIR", IN_ISDIR);
+#endif
+#ifdef IN_ONESHOT
+    define_const(dict, "IN_ONESHOT", IN_ONESHOT);
+#endif
+
+#ifdef IN_ALL_EVENTS
+    define_const(dict, "IN_ALL_EVENTS", IN_ALL_EVENTS);
+#endif
+}
+
 void init_inotify(void)
 {
-    PyObject *mod;
+    PyObject *mod, *dict;
 
     mod = Py_InitModule3("_inotify", methods, doc);
+
+    dict = PyModule_GetDict(mod);
+    
+    if (dict)
+	define_consts(dict);
 }
