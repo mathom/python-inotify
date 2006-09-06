@@ -257,6 +257,9 @@ class Threshold(object):
         self.threshold = threshold
         self._iocbuf = array.array('i', [0])
 
-    def __call__(self):
+    def readable(self):
         fcntl.ioctl(self.fd, termios.FIONREAD, self._iocbuf, True)
-        return self._iocbuf[0] >= threshold
+        return self._iocbuf[0]
+
+    def __call__(self):
+        return self.readable() >= self.threshold
