@@ -11,6 +11,8 @@ available.
 The AutoWatcher class is more useful, as it automatically watches
 newly-created directories on your behalf.'''
 
+__author__ = "Bryan O'Sullivan <bos@serpentine.com>"
+
 import _inotify as inotify
 import array
 import errno
@@ -169,7 +171,7 @@ class BasicWatcher(object):
 
     ignored_errors = [errno.ENOENT, errno.EPERM, errno.ENOTDIR]
 
-    def additer(self, path, mask, onerror=None):
+    def add_iter(self, path, mask, onerror=None):
         '''Add or modify watches over path and its subdirectories.
 
         Yield each added or modified watch descriptor.
@@ -178,7 +180,7 @@ class BasicWatcher(object):
         iterate over all of its results, even if you do not care what
         they are.  For example:
 
-            for wd in w.walk(path, mask):
+            for wd in w.add_iter(path, mask):
                 pass
 
         By default, errors are ignored.  If optional arg "onerror" is
@@ -195,6 +197,11 @@ class BasicWatcher(object):
 
         submask = mask | inotify.IN_ONLYDIR
 
+        try:
+            yield self.add(path, mask)
+        except OSError, err:
+            if onerror and err.errno not in self.ignored_errors:
+                onerror(err)
         for root, dirs, names in os.walk(path, topdown=False, onerror=onerror):
             for d in dirs:
                 try:
@@ -202,8 +209,9 @@ class BasicWatcher(object):
                 except OSError, err:
                     if onerror and err.errno not in self.ignored_errors:
                         onerror(err)
-        yield self.add(path, mask)
 
+    def add_all(self, path, mask, onerror=None):
+        return [w for w in self.add_iter(path, mask, onerror)]
 
 class AutoWatcher(BasicWatcher):
     '''Watcher class that automatically watches newly created directories.'''
@@ -238,7 +246,7 @@ class AutoWatcher(BasicWatcher):
                     # See note about race avoidance via IN_ONLYDIR above.
                     mask = parentmask | inotify.IN_ONLYDIR
                     try:
-                        self.add(evt.fullpath, mask)
+                        self.add_all(evt.fullpath, mask)
                     except OSError, err:
                         if err.errno not in self.ignored_errors:
                             raise

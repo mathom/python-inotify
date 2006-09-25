@@ -9,6 +9,8 @@ associated constants and helper functions.
 For a higher-level interface that remains highly efficient, use the
 inotify.watcher package.'''
 
+__author__ = "Bryan O'Sullivan <bos@serpentine.com>"
+
 from _inotify import *
 
 procfs_path = '/proc/sys/fs/inotify'
