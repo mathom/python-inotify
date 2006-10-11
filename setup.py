@@ -10,13 +10,15 @@ if not platform.startswith('linux'):
                     platform)
 
 distutils.core.setup(
-    name='inotify',
+    name='python-inotify',
     version='0.5',
-    description='Interface to Linux inotify service',
+    description='Interface to Linux inotify subsystem',
     author="Bryan O'Sullivan",
     author_email='bos@serpentine.com',
     license='LGPL',
     platforms='Linux',
     packages=['inotify'],
-    ext_modules=[distutils.core.Extension('inotify._inotify', ['inotify/_inotify.c'])],
+    url='http://www.serpentine.com/',
+    ext_modules=[distutils.core.Extension('inotify._inotify',
+                                          ['inotify/_inotify.c'])],
     )

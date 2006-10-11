@@ -1,9 +1,17 @@
+# watcher.py - high-level interfaces to the Linux inotify subsystem
+
+# Copyright 2006 Bryan O'Sullivan <bos@serpentine.com>
+
+# This library is free software; you can redistribute it and/or modify
+# it under the terms of version 2.1 of the GNU Lesser General Public
+# License, incorporated herein by reference.
+
 '''High-level interfaces to the Linux inotify subsystem.
 
 The inotify subsystem provides an efficient mechanism for file status
 monitoring and change notification.
 
-The BasicWatcher class hides the low-level details of the inotify
+The Watcher class hides the low-level details of the inotify
 interface, and provides a Pythonic wrapper around it.  It generates
 events that provide somewhat more information than raw inotify makes
 available.
@@ -26,16 +34,18 @@ class Event(object):
 
     The following fields are available:
 
+        mask: event mask, indicating what kind of event this is
+
+        cookie: rename cookie, if a rename-related event
+
         path: path of the directory in which the event occurred
 
         name: name of the directory entry to which the event occurred
-        (may be None)
+        (may be None if the event happened to a watched directory)
 
         fullpath: complete path at which the event occurred
 
-        wd: watch descriptor that triggered this event
-
-        mask: event mask'''
+        wd: watch descriptor that triggered this event'''
 
     __slots__ = (
         'cookie',
@@ -65,11 +75,41 @@ class Event(object):
         return 'Event(path=' + repr(self.path) + ', ' + r[r.find('(')+1:]
 
 
-class BasicWatcher(object):
+_event_props = {
+    'access': 'File was accessed',
+    'modify': 'File was modified',
+    'attrib': 'Attribute of a directory entry was changed',
+    'close_write': 'File was closed after being written to',
+    'close_nowrite': 'File was closed without being written to',
+    'open': 'File was opened',
+    'moved_from': 'Directory entry was renamed from this name',
+    'moved_to': 'Directory entry was renamed to this name',
+    'create': 'Directory entry was created',
+    'delete': 'Directory entry was deleted',
+    'delete_self': 'The watched directory entry was deleted',
+    'move_self': 'The watched directory entry was renamed',
+    'unmount': 'Directory was unmounted, and can no longer be watched',
+    'q_overflow': 'Kernel dropped events due to queue overflow',
+    'ignored': 'Directory entry is no longer being watched',
+    'isdir': 'Event occurred on a directory',
+    }
+
+for k, v in _event_props.iteritems():
+    mask = getattr(inotify, 'IN_' + k.upper())
+    def getter(self):
+        return self.mask & mask
+    getter.__name__ = k
+    getter.__doc__ = v
+    setattr(Event, k, property(getter, doc=v))
+
+del _event_props
+
+
+class Watcher(object):
     '''Provide a Pythonic interface to the low-level inotify API.
 
-    Also adds derived information to events that is not available
-    through the normal inotify API, such as directory names.'''
+    Also adds derived information to each event that is not available
+    through the normal inotify API, such as directory name.'''
 
     __slots__ = (
         'fd',
@@ -160,7 +200,8 @@ class BasicWatcher(object):
         return len(self._paths)
 
     def __iter__(self):
-        '''Yield a (path, watch descriptor, vent mask) tuple for each entry.'''
+        '''Yield a (path, watch descriptor, event mask) tuple for each
+        entry being watched.'''
 
         for path, (wd, mask) in self._paths.iteritems():
             yield path, wd, mask
@@ -211,9 +252,20 @@ class BasicWatcher(object):
                         onerror(err)
 
     def add_all(self, path, mask, onerror=None):
+        '''Add or modify watches over path and its subdirectories.
+
+        Return a list of added or modified watch descriptors.
+
+        By default, errors are ignored.  If optional arg "onerror" is
+        specified, it should be a function; it will be called with one
+        argument, an OSError instance.  It can report the error to
+        continue with the walk, or raise the exception to abort the
+        walk.'''
+
         return [w for w in self.add_iter(path, mask, onerror)]
 
-class AutoWatcher(BasicWatcher):
+
+class AutoWatcher(Watcher):
     '''Watcher class that automatically watches newly created directories.'''
 
     __slots__ = (
@@ -254,6 +306,11 @@ class AutoWatcher(BasicWatcher):
 
 
 class Threshold(object):
+    '''Class that indicates whether a file descriptor has reached a
+    threshold of readable bytes available.
+
+    This class is not thread-safe.'''
+
     __slots__ = (
         'fd',
         'threshold',
@@ -266,8 +323,13 @@ class Threshold(object):
         self._iocbuf = array.array('i', [0])
 
     def readable(self):
+        '''Return the number of bytes readable on this file descriptor.'''
+
         fcntl.ioctl(self.fd, termios.FIONREAD, self._iocbuf, True)
         return self._iocbuf[0]
 
     def __call__(self):
+        '''Indicate whether the number of readable bytes has met or
+        exceeded the threshold.'''
+
         return self.readable() >= self.threshold

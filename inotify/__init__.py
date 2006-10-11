@@ -1,3 +1,11 @@
+# __init__.py - low-level interfaces to the Linux inotify subsystem
+
+# Copyright 2006 Bryan O'Sullivan <bos@serpentine.com>
+
+# This library is free software; you can redistribute it and/or modify
+# it under the terms of version 2.1 of the GNU Lesser General Public
+# License, incorporated herein by reference.
+
 '''Low-level interface to the Linux inotify subsystem.
 
 The inotify subsystem provides an efficient mechanism for file status
