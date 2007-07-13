@@ -11,6 +11,7 @@
 #include <Python.h>
 #include <alloca.h>
 #include <sys/inotify.h>
+#include <stdint.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
