@@ -1,5 +1,11 @@
-About python-inotify
---------------------
+# python-inotify
+
+## Origins
+
+This is a fork of Bryan O'Sullivan's python-inotify library. It has been
+converted to setuptools and will have a test suite soon.
+
+## About
 
 This is python-inotify, a Python interface to the Linux 2.6 kernel's
 inotify subsystem.  The inotify subsystem provides an efficient way to
@@ -19,8 +25,7 @@ want to read queued events yet.
 
 
 
-This package is *not* pyinotify
--------------------------------
+## This package is *not* pyinotify
 
 To confuse matters a little, there's another Python inotify interface
 available, called pyinotify.  I wrote python-inotify as a reaction to
@@ -33,8 +38,7 @@ You can find pyinotify at http://pyinotify.sourceforge.net/
 
 
 
-Notice of copyright and license
--------------------------------
+## Notice of copyright and license
 
 This library is free software; you can redistribute it and/or modify
 it under the terms of version 2.1 of the GNU Lesser General Public
